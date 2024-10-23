@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:memo/colors.dart';
-import 'package:memo/memorisation_model.dart';
+import 'package:memo/data/memorisation_model.dart';
+import 'package:memo/presentation/widgets/memo_action_button.dart';
+import 'package:memo/presentation/widgets/memo_popup_menu_button.dart';
+import 'package:memo/presentation/widgets/memo_word_item.dart';
+import 'package:memo/presentation/widgets/translate_dialog.dart';
+import 'package:memo/presentation/widgets/word_dialog.dart';
+import 'package:memo/srs/colors.dart';
 import 'package:path_provider/path_provider.dart';
 
 const String memoryBoxName = 'MemorisationBox';
@@ -24,7 +28,7 @@ class MyApp extends StatelessWidget {
   Widget build(final BuildContext context) => MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          textTheme: GoogleFonts.caveatTextTheme(Theme.of(context).textTheme),
+          fontFamily: 'Caveat',
           inputDecorationTheme: InputDecorationTheme(focusColor: green),
           appBarTheme: AppBarTheme(backgroundColor: green, shadowColor: milk),
           scaffoldBackgroundColor: milk,
@@ -77,51 +81,22 @@ class MyHomePageState extends State<MyHomePage> {
             ),
           ),
           actions: <Widget>[
-            PopupMenuButton<String>(
-              icon: const Padding(
-                padding: EdgeInsets.only(right: 15),
-                child: Icon(
-                  Icons.arrow_drop_down,
-                ),
-              ),
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(20),
-                ),
-              ),
-              color: milk,
-              onSelected: (final value) {
-                if (value.compareTo('Tous') == 0) {
+            MemoPopupMenuButton(
+              onSelectedItem: (final value) {
+                if (value case 'All') {
                   setState(() {
                     filter = Filter.all;
                   });
-                } else if (value.compareTo('Mémorisé') == 0) {
+                } else if (value case 'Learned') {
                   setState(() {
                     filter = Filter.remembered;
                   });
-                } else {
+                } else if (value case 'Not learned') {
                   setState(() {
                     filter = Filter.unremembered;
                   });
                 }
               },
-              itemBuilder: (final context) => [
-                'Tous',
-                'Mémorisé',
-                'Non mémorisé',
-              ]
-                  .map(
-                    (final option) => PopupMenuItem(
-                      textStyle: const TextStyle(
-                        fontSize: 20,
-                        color: Colors.black,
-                        fontFamily: 'Caveat',
-                      ),
-                      value: option,
-                      child: Text(option),
-                    ),
-                  )
-                  .toList(),
             ),
           ],
         ),
@@ -130,98 +105,69 @@ class MyHomePageState extends State<MyHomePage> {
           builder: (final context, final words, final _) {
             List<int> keys;
 
-            if (filter == Filter.all) {
-              keys = words.keys.cast<int>().toList();
-            } else if (filter == Filter.remembered) {
-              keys = words.keys
-                  .cast<int>()
-                  .where((final key) => words.get(key)!.isLearned)
-                  .toList();
-            } else {
-              keys = words.keys
-                  .cast<int>()
-                  .where((final key) => !words.get(key)!.isLearned)
-                  .toList();
+            switch (filter) {
+              case Filter.all:
+                keys = words.keys.cast<int>().toList();
+              case Filter.remembered:
+                keys = words.keys
+                    .cast<int>()
+                    .where((final key) => words.get(key)!.isLearned)
+                    .toList();
+              case Filter.unremembered:
+                keys = words.keys
+                    .cast<int>()
+                    .where((final key) => !words.get(key)!.isLearned)
+                    .toList();
             }
 
             return ListView.separated(
-              itemBuilder: (final _, final index) {
+              itemBuilder: (final context, final index) {
                 final int key = keys[index];
                 final MemorisationModel? memorisation = words.get(key);
-                return ListTile(
-                  contentPadding: const EdgeInsets.only(left: 10, right: 5),
-                  minLeadingWidth: 0,
-                  minVerticalPadding: 0,
-                  title: Transform.translate(
-                    offset: const Offset(0, 1),
-                    child: Text(
-                      memorisation!.word,
-                      style: const TextStyle(fontSize: 35),
-                    ),
-                  ),
-                  subtitle: Transform.translate(
-                    offset: const Offset(0, -5),
-                    child: Text(
-                      '[ ${memorisation.transcription} ]',
-                      style: const TextStyle(fontSize: 26),
-                    ),
-                  ),
-                  leading: IconButton(
-                    onPressed: () {
+                if (memorisation != null) {
+                  return MemoWordItem(
+                    memorisationWord: memorisation.word,
+                    memorisationTranscription: memorisation.transcription,
+                    memorisationTranslation: memorisation.translation,
+                    onAddWord: () {
                       setState(() async {
-                        if (!memorisation.isLearned) {
-                          final MemorisationModel mTodo = MemorisationModel(
+                        if (memorisation.isLearned case false) {
+                          final learnedWord = MemorisationModel(
                             word: memorisation.word,
                             transcription: memorisation.transcription,
                             translation: memorisation.translation,
                             isLearned: true,
                           );
-                          await memoryBox.put(key, mTodo);
-                        } else {
-                          final MemorisationModel mTodo = MemorisationModel(
+                          await memoryBox.put(key, learnedWord);
+                        } else if (memorisation.isLearned case true) {
+                          final notLearnedWord = MemorisationModel(
                             word: memorisation.word,
                             transcription: memorisation.transcription,
                             translation: memorisation.translation,
                             isLearned: false,
                           );
-                          await memoryBox.put(key, mTodo);
+                          await memoryBox.put(key, notLearnedWord);
                         }
                       });
                     },
-                    icon: Icon(
-                      Icons.grade,
-                      color: memorisation.isLearned
-                          ? Colors.amber
-                          : Colors.grey.shade600,
-                      size: 32,
-                    ),
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.clear),
-                    color: red,
-                    onPressed: () {
-                      setState(() async {
-                        await memoryBox.deleteAt(index);
-                        await memoryBox.compact();
-                      });
+                    onDeleteWord: () async {
+                      await memoryBox.deleteAt(index);
+                      setState(() {});
                     },
-                  ),
-                  onTap: () async {
-                    await showDialog(
-                      context: context,
-                      builder: (final context) => Dialog(
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          child: Text(
-                            memorisation.translation,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 30),
-                          ),
+                    onShowTranslate: () async {
+                      await showDialog(
+                        context: context,
+                        builder: (final context) => TranslateDialog(
+                          translationText: memorisation.translation,
                         ),
-                      ),
-                    );
-                  },
-                );
+                      );
+                    },
+                    iconColor: memorisation.isLearned
+                        ? Colors.amber
+                        : Colors.grey.shade600,
+                  );
+                }
+                return null;
               },
               separatorBuilder: (final _, final index) => const Divider(),
               itemCount: keys.length,
@@ -229,112 +175,38 @@ class MyHomePageState extends State<MyHomePage> {
             );
           },
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () async {
+        floatingActionButton: MemoActionButton(
+          onActionButtonPressed: () async {
             await showDialog(
               context: context,
-              builder: (final context) => Dialog(
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(20)),
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      TextField(
-                        cursorColor: teal,
-                        style: const TextStyle(fontSize: 28),
-                        decoration: InputDecoration(
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: teal),
-                          ),
-                          hintText: 'Un mot',
-                          hintStyle: const TextStyle(fontSize: 24),
-                          focusColor: Colors.grey,
-                        ),
-                        controller: wordController,
-                      ),
-                      const SizedBox(
-                        height: 8,
-                      ),
-                      TextField(
-                        cursorColor: teal,
-                        style: const TextStyle(fontSize: 28),
-                        decoration: InputDecoration(
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: teal),
-                          ),
-                          hintText: 'Une transcription',
-                          hintStyle: const TextStyle(fontSize: 24),
-                        ),
-                        controller: transcriptionController,
-                      ),
-                      const SizedBox(
-                        height: 8,
-                      ),
-                      TextField(
-                        cursorColor: teal,
-                        style: const TextStyle(fontSize: 28),
-                        decoration: InputDecoration(
-                          hintText: 'Une traduction',
-                          hintStyle: const TextStyle(fontSize: 24),
-                          focusedBorder: UnderlineInputBorder(
-                            borderSide: BorderSide(color: teal),
-                          ),
-                        ),
-                        controller: translationController,
-                      ),
-                      const SizedBox(
-                        height: 15,
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          final String wordText = wordController.text;
-                          final String transcriptionText =
-                              transcriptionController.text;
-                          final String translationText =
-                              translationController.text;
+              builder: (final context) => WordDialog(
+                wordController: wordController,
+                transcriptionController: transcriptionController,
+                translationController: translationController,
+                toAddNewWord: () async {
+                  final String wordText = wordController.text;
+                  final String transcriptionText = transcriptionController.text;
+                  final String translationText = translationController.text;
 
-                          final MemorisationModel todo = MemorisationModel(
-                            word: wordText,
-                            transcription: transcriptionText,
-                            translation: translationText,
-                            isLearned: false,
-                          );
+                  final newWord = MemorisationModel(
+                    word: wordText,
+                    transcription: transcriptionText,
+                    translation: translationText,
+                    isLearned: false,
+                  );
 
-                          memoryBox.add(todo);
-                          wordController.clear();
-                          transcriptionController.clear();
-                          translationController.clear();
+                  await memoryBox.add(newWord);
+                  wordController.clear();
+                  transcriptionController.clear();
+                  translationController.clear();
 
-                          Navigator.pop(context);
-                        },
-                        style: ButtonStyle(
-                          backgroundColor: WidgetStateProperty.all(teal),
-                          shape: WidgetStateProperty.all(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                        ),
-                        child: Text(
-                          'Ajouter un nouveau mot',
-                          style: TextStyle(
-                            fontSize: 22,
-                            color: milk,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                  }
+                },
               ),
             );
           },
-          child: const Icon(
-            Icons.add,
-          ),
         ),
       );
 }
