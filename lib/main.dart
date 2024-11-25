@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:memo/data/filter_model.dart';
 import 'package:memo/data/memorisation_model.dart';
 import 'package:memo/presentation/widgets/memo_action_button.dart';
 import 'package:memo/presentation/widgets/memo_popup_menu_button.dart';
@@ -9,7 +10,7 @@ import 'package:memo/presentation/widgets/word_dialog.dart';
 import 'package:memo/srs/colors.dart';
 import 'package:path_provider/path_provider.dart';
 
-const String memoryBoxName = 'MemorisationBox';
+// const String memoryBoxName = 'MemorisationBox';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,7 +18,7 @@ void main() async {
   Hive
     ..init(document.path)
     ..registerAdapter(MemorisationModelAdapter());
-  await Hive.openBox<MemorisationModel>(memoryBoxName);
+  // await Hive.openBox<MemorisationModel>(memoryBoxName);
   runApp(const MyApp());
 }
 
@@ -49,12 +50,6 @@ class MyHomePage extends StatefulWidget {
   MyHomePageState createState() => MyHomePageState();
 }
 
-enum Filter {
-  all,
-  remembered,
-  unremembered,
-}
-
 class MyHomePageState extends State<MyHomePage> {
   late Box<MemorisationModel> memoryBox;
 
@@ -67,7 +62,7 @@ class MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    memoryBox = Hive.box<MemorisationModel>(memoryBoxName);
+    // memoryBox = Hive.box<MemorisationModel>(memoryBoxName);
   }
 
   @override
@@ -129,30 +124,27 @@ class MyHomePageState extends State<MyHomePage> {
                     memorisationWord: memorisation.word,
                     memorisationTranscription: memorisation.transcription,
                     memorisationTranslation: memorisation.translation,
-                    onAddWord: () {
-                      setState(() async {
-                        if (memorisation.isLearned case false) {
-                          final learnedWord = MemorisationModel(
-                            word: memorisation.word,
-                            transcription: memorisation.transcription,
-                            translation: memorisation.translation,
-                            isLearned: true,
-                          );
-                          await memoryBox.put(key, learnedWord);
-                        } else if (memorisation.isLearned case true) {
-                          final notLearnedWord = MemorisationModel(
-                            word: memorisation.word,
-                            transcription: memorisation.transcription,
-                            translation: memorisation.translation,
-                            isLearned: false,
-                          );
-                          await memoryBox.put(key, notLearnedWord);
-                        }
-                      });
+                    onAddWord: () async {
+                      if (memorisation.isLearned case false) {
+                        final learnedWord = MemorisationModel(
+                          word: memorisation.word,
+                          transcription: memorisation.transcription,
+                          translation: memorisation.translation,
+                          isLearned: true,
+                        );
+                        await memoryBox.put(key, learnedWord);
+                      } else if (memorisation.isLearned case true) {
+                        final notLearnedWord = MemorisationModel(
+                          word: memorisation.word,
+                          transcription: memorisation.transcription,
+                          translation: memorisation.translation,
+                          isLearned: false,
+                        );
+                        await memoryBox.put(key, notLearnedWord);
+                      }
                     },
                     onDeleteWord: () async {
                       await memoryBox.deleteAt(index);
-                      setState(() {});
                     },
                     onShowTranslate: () async {
                       await showDialog(

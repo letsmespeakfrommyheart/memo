@@ -11,17 +11,6 @@ class MemoActionButton extends StatelessWidget {
   @override
   Widget build(final BuildContext context) => FloatingActionButton(
         onPressed: onActionButtonPressed,
-        // onPressed: () async {
-        //   await showDialog(
-        //     context: context,
-        //     builder: (final context) => WordDialog(
-        //       wordController: wordController,
-        //       transcriptionController: transcriptionController,
-        //       translationController: translationController,
-        //       memoryBox: memoryBox,
-        //     ),
-        //   );
-        // },
         child: const Icon(
           Icons.add,
         ),
