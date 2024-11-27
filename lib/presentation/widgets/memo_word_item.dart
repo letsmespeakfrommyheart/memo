@@ -6,7 +6,7 @@ class MemoWordItem extends StatelessWidget {
     required this.memorisationWord,
     required this.memorisationTranscription,
     required this.memorisationTranslation,
-    required this.onAddWord,
+    required this.onChangeLearningState,
     required this.onDeleteWord,
     required this.onShowTranslate,
     required this.iconColor,
@@ -16,7 +16,7 @@ class MemoWordItem extends StatelessWidget {
   final String memorisationWord;
   final String memorisationTranscription;
   final String memorisationTranslation;
-  final Function()? onAddWord;
+  final Function()? onChangeLearningState;
   final Function()? onDeleteWord;
   final Function()? onShowTranslate;
   final Color iconColor;
@@ -41,7 +41,7 @@ class MemoWordItem extends StatelessWidget {
           ),
         ),
         leading: IconButton(
-          onPressed: onAddWord,
+          onPressed: onChangeLearningState,
           icon: Icon(
             Icons.grade,
             color: iconColor,

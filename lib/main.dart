@@ -5,7 +5,6 @@ import 'package:memo/data/memorisation_model.dart';
 import 'package:memo/presentation/widgets/memo_action_button.dart';
 import 'package:memo/presentation/widgets/memo_popup_menu_button.dart';
 import 'package:memo/presentation/widgets/memo_word_item.dart';
-import 'package:memo/presentation/widgets/translate_dialog.dart';
 import 'package:memo/presentation/widgets/word_dialog.dart';
 import 'package:memo/srs/colors.dart';
 import 'package:path_provider/path_provider.dart';
@@ -118,50 +117,50 @@ class MyHomePageState extends State<MyHomePage> {
             return ListView.separated(
               itemBuilder: (final context, final index) {
                 final int key = keys[index];
-                final MemorisationModel? memorisation = words.get(key);
-                if (memorisation != null) {
+                final MemorisationModel? memoWord = words.get(key);
+                if (memoWord != null) {
                   return MemoWordItem(
-                    memorisationWord: memorisation.word,
-                    memorisationTranscription: memorisation.transcription,
-                    memorisationTranslation: memorisation.translation,
-                    onAddWord: () async {
-                      if (memorisation.isLearned case false) {
-                        final learnedWord = MemorisationModel(
-                          word: memorisation.word,
-                          transcription: memorisation.transcription,
-                          translation: memorisation.translation,
-                          isLearned: true,
-                        );
-                        await memoryBox.put(key, learnedWord);
-                      } else if (memorisation.isLearned case true) {
-                        final notLearnedWord = MemorisationModel(
-                          word: memorisation.word,
-                          transcription: memorisation.transcription,
-                          translation: memorisation.translation,
-                          isLearned: false,
-                        );
-                        await memoryBox.put(key, notLearnedWord);
-                      }
+                    memorisationWord: memoWord.word,
+                    memorisationTranscription: memoWord.transcription,
+                    memorisationTranslation: memoWord.translation,
+                    onChangeLearningState: () async {
+                      // if (memoWord.isLearned case false) {
+                      //   final learnedWord = MemorisationModel(
+                      //     word: memoWord.word,
+                      //     transcription: memoWord.transcription,
+                      //     translation: memoWord.translation,
+                      //     isLearned: true,
+                      //   );
+                      //   await memoryBox.put(key, learnedWord);
+                      // } else if (memoWord.isLearned case true) {
+                      //   final notLearnedWord = MemorisationModel(
+                      //     word: memoWord.word,
+                      //     transcription: memoWord.transcription,
+                      //     translation: memoWord.translation,
+                      //     isLearned: false,
+                      //   );
+                      //   await memoryBox.put(key, notLearnedWord);
+                      // }
                     },
                     onDeleteWord: () async {
-                      await memoryBox.deleteAt(index);
+                      // await memoryBox.deleteAt(index);
                     },
                     onShowTranslate: () async {
-                      await showDialog(
-                        context: context,
-                        builder: (final context) => TranslateDialog(
-                          translationText: memorisation.translation,
-                        ),
-                      );
+                      // await showDialog(
+                      //   context: context,
+                      //   builder: (final context) => TranslateDialog(
+                      //     translationText: memorisation.translation,
+                      //   ),
+                      // );
                     },
-                    iconColor: memorisation.isLearned
+                    iconColor: memoWord.isLearned
                         ? Colors.amber
                         : Colors.grey.shade600,
                   );
                 }
                 return null;
               },
-              separatorBuilder: (final _, final index) => const Divider(),
+              separatorBuilder: (final context, final index) => const Divider(),
               itemCount: keys.length,
               shrinkWrap: true,
             );
@@ -180,21 +179,21 @@ class MyHomePageState extends State<MyHomePage> {
                   final String transcriptionText = transcriptionController.text;
                   final String translationText = translationController.text;
 
-                  final newWord = MemorisationModel(
-                    word: wordText,
-                    transcription: transcriptionText,
-                    translation: translationText,
-                    isLearned: false,
-                  );
+                  // final newWord = MemorisationModel(
+                  //   word: wordText,
+                  //   transcription: transcriptionText,
+                  //   translation: translationText,
+                  //   isLearned: false,
+                  // );
 
-                  await memoryBox.add(newWord);
+                  // await memoryBox.add(newWord);
                   wordController.clear();
                   transcriptionController.clear();
                   translationController.clear();
 
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                  }
+                  // if (context.mounted) {
+                  //   Navigator.pop(context);
+                  // }
                 },
               ),
             );
