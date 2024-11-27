@@ -12,26 +12,25 @@ part 'memo_cubit_states.dart';
 part 'memo_cubit.freezed.dart';
 
 class MemoCubit extends Cubit<MemoCubitStates> {
-  MemoCubit() : super(const MemoCubitStates()) {
-    unawaited(_initHive());
+  MemoCubit(this.memoryBox) : super(const MemoCubitStates()) {
+    filterKeys(Filter.all, memoryBox);
   }
-
-  final String memoryBoxName = 'MemorizationBox';
-
-  Future<void> _initHive() async {
-    final memoryBox = await Hive.openBox<MemorisationModel>(memoryBoxName);
-    // final memoryBox = Hive.box<MemorisationModel>(memoryBoxName);
-    emit(state.copyWith(listOfWords: memoryBox.values.toList()));
-  }
+  final Box<MemorisationModel> memoryBox;
 
   void onPopUp(final String value) {
+    final Filter newFilter;
     if (value case 'All') {
-      emit(state.copyWith(filter: Filter.all));
+      newFilter = Filter.all;
     } else if (value case 'Learned') {
-      emit(state.copyWith(filter: Filter.remembered));
+      newFilter = Filter.remembered;
     } else if (value case 'Not learned') {
-      emit(state.copyWith(filter: Filter.unremembered));
+      newFilter = Filter.unremembered;
+    } else {
+      return;
     }
+
+    emit(state.copyWith(filter: newFilter));
+    filterKeys(state.filter, memoryBox);
   }
 
   Future<void> addNewWord(
@@ -39,7 +38,6 @@ class MemoCubit extends Cubit<MemoCubitStates> {
     final String transcription,
     final String transtation,
     final BuildContext context,
-    final Box<MemorisationModel> memoryBox,
   ) async {
     final newWord = MemorisationModel(
       word: word,
@@ -48,6 +46,7 @@ class MemoCubit extends Cubit<MemoCubitStates> {
       isLearned: false,
     );
     await memoryBox.add(newWord);
+    filterKeys(state.filter, memoryBox);
     emit(state.copyWith(listOfWords: memoryBox.values.toList()));
     if (context.mounted) {
       Navigator.pop(context);
@@ -55,10 +54,10 @@ class MemoCubit extends Cubit<MemoCubitStates> {
   }
 
   Future<void> onDeleteWord(
-    final Box<MemorisationModel> memoryBox,
     final int index,
   ) async {
     await memoryBox.deleteAt(index);
+    filterKeys(state.filter, memoryBox);
     emit(state.copyWith(listOfWords: memoryBox.values.toList()));
   }
 
@@ -76,7 +75,6 @@ class MemoCubit extends Cubit<MemoCubitStates> {
 
   Future<void> onChangeLearningState(
     final MemorisationModel memoWord,
-    final Box<MemorisationModel> memoryBox,
     final int key,
   ) async {
     if (memoWord.isLearned case false) {
@@ -113,10 +111,9 @@ class MemoCubit extends Cubit<MemoCubitStates> {
       case Filter.unremembered:
         filteredKeys = words.keys
             .cast<int>()
-            .where((final key) => !words.get(key)!.isLearned)
+            .where((final key) => !(words.get(key)?.isLearned ?? true))
             .toList();
-
-        emit(state.copyWith(filteredKeys: filteredKeys));
     }
+    emit(state.copyWith(filteredKeys: filteredKeys));
   }
 }

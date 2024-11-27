@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:memo/data/filter_model.dart';
+import 'package:memo/cubit/memo_cubit.dart';
 import 'package:memo/data/memorisation_model.dart';
 import 'package:memo/presentation/widgets/memo_action_button.dart';
 import 'package:memo/presentation/widgets/memo_popup_menu_button.dart';
@@ -9,7 +10,7 @@ import 'package:memo/presentation/widgets/word_dialog.dart';
 import 'package:memo/srs/colors.dart';
 import 'package:path_provider/path_provider.dart';
 
-// const String memoryBoxName = 'MemorisationBox';
+const String memoryBoxName = 'MemorisationBox';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,8 +18,13 @@ void main() async {
   Hive
     ..init(document.path)
     ..registerAdapter(MemorisationModelAdapter());
-  // await Hive.openBox<MemorisationModel>(memoryBoxName);
-  runApp(const MyApp());
+  final memoryBox = await Hive.openBox<MemorisationModel>(memoryBoxName);
+  runApp(
+    BlocProvider(
+      create: (final context) => MemoCubit(memoryBox),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -50,19 +56,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class MyHomePageState extends State<MyHomePage> {
-  late Box<MemorisationModel> memoryBox;
-
   final TextEditingController wordController = TextEditingController();
   final TextEditingController transcriptionController = TextEditingController();
   final TextEditingController translationController = TextEditingController();
-
-  Filter filter = Filter.all;
-
-  @override
-  void initState() {
-    super.initState();
-    // memoryBox = Hive.box<MemorisationModel>(memoryBoxName);
-  }
 
   @override
   Widget build(final BuildContext context) => Scaffold(
@@ -76,82 +72,36 @@ class MyHomePageState extends State<MyHomePage> {
           ),
           actions: <Widget>[
             MemoPopupMenuButton(
-              onSelectedItem: (final value) {
-                if (value case 'All') {
-                  setState(() {
-                    filter = Filter.all;
-                  });
-                } else if (value case 'Learned') {
-                  setState(() {
-                    filter = Filter.remembered;
-                  });
-                } else if (value case 'Not learned') {
-                  setState(() {
-                    filter = Filter.unremembered;
-                  });
-                }
-              },
+              onSelectedItem: context.read<MemoCubit>().onPopUp,
             ),
           ],
         ),
-        body: ValueListenableBuilder(
-          valueListenable: memoryBox.listenable(),
-          builder: (final context, final words, final _) {
-            List<int> keys;
-
-            switch (filter) {
-              case Filter.all:
-                keys = words.keys.cast<int>().toList();
-              case Filter.remembered:
-                keys = words.keys
-                    .cast<int>()
-                    .where((final key) => words.get(key)!.isLearned)
-                    .toList();
-              case Filter.unremembered:
-                keys = words.keys
-                    .cast<int>()
-                    .where((final key) => !words.get(key)!.isLearned)
-                    .toList();
-            }
-
+        body: BlocBuilder<MemoCubit, MemoCubitStates>(
+          builder: (final context, final state) {
+            final memoCubit = context.read<MemoCubit>();
+            final filteredKeys = memoCubit.state.filteredKeys;
             return ListView.separated(
+              itemCount: filteredKeys.length,
               itemBuilder: (final context, final index) {
-                final int key = keys[index];
-                final MemorisationModel? memoWord = words.get(key);
+                final key = filteredKeys[index];
+                final memoWord = memoCubit.memoryBox.get(key);
                 if (memoWord != null) {
                   return MemoWordItem(
                     memorisationWord: memoWord.word,
                     memorisationTranscription: memoWord.transcription,
                     memorisationTranslation: memoWord.translation,
                     onChangeLearningState: () async {
-                      // if (memoWord.isLearned case false) {
-                      //   final learnedWord = MemorisationModel(
-                      //     word: memoWord.word,
-                      //     transcription: memoWord.transcription,
-                      //     translation: memoWord.translation,
-                      //     isLearned: true,
-                      //   );
-                      //   await memoryBox.put(key, learnedWord);
-                      // } else if (memoWord.isLearned case true) {
-                      //   final notLearnedWord = MemorisationModel(
-                      //     word: memoWord.word,
-                      //     transcription: memoWord.transcription,
-                      //     translation: memoWord.translation,
-                      //     isLearned: false,
-                      //   );
-                      //   await memoryBox.put(key, notLearnedWord);
-                      // }
+                      await context
+                          .read<MemoCubit>()
+                          .onChangeLearningState(memoWord, key);
                     },
                     onDeleteWord: () async {
-                      // await memoryBox.deleteAt(index);
+                      await context.read<MemoCubit>().onDeleteWord(index);
                     },
                     onShowTranslate: () async {
-                      // await showDialog(
-                      //   context: context,
-                      //   builder: (final context) => TranslateDialog(
-                      //     translationText: memorisation.translation,
-                      //   ),
-                      // );
+                      await context
+                          .read<MemoCubit>()
+                          .onShowTranslate(context, memoWord);
                     },
                     iconColor: memoWord.isLearned
                         ? Colors.amber
@@ -161,7 +111,6 @@ class MyHomePageState extends State<MyHomePage> {
                 return null;
               },
               separatorBuilder: (final context, final index) => const Divider(),
-              itemCount: keys.length,
               shrinkWrap: true,
             );
           },
@@ -179,21 +128,15 @@ class MyHomePageState extends State<MyHomePage> {
                   final String transcriptionText = transcriptionController.text;
                   final String translationText = translationController.text;
 
-                  // final newWord = MemorisationModel(
-                  //   word: wordText,
-                  //   transcription: transcriptionText,
-                  //   translation: translationText,
-                  //   isLearned: false,
-                  // );
-
-                  // await memoryBox.add(newWord);
+                  await context.read<MemoCubit>().addNewWord(
+                        wordText,
+                        transcriptionText,
+                        translationText,
+                        context,
+                      );
                   wordController.clear();
                   transcriptionController.clear();
                   translationController.clear();
-
-                  // if (context.mounted) {
-                  //   Navigator.pop(context);
-                  // }
                 },
               ),
             );
