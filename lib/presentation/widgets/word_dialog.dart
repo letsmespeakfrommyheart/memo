@@ -59,7 +59,7 @@ class WordDialog extends StatelessWidget {
                 cursorColor: teal,
                 style: const TextStyle(fontSize: 28),
                 decoration: InputDecoration(
-                  hintText: 'Transtation',
+                  hintText: 'Translation',
                   hintStyle: const TextStyle(fontSize: 24),
                   focusedBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: teal),

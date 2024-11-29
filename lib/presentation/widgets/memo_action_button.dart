@@ -9,9 +9,9 @@ class MemoActionButton extends StatelessWidget {
   final Function()? onActionButtonPressed;
 
   @override
-  Widget build(final BuildContext context) => FloatingActionButton(
+  Widget build(final BuildContext context) => ElevatedButton.icon(
         onPressed: onActionButtonPressed,
-        child: const Icon(
+        label: const Icon(
           Icons.add,
         ),
       );

@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:memo/cubit/memo_cubit.dart';
 import 'package:memo/data/memorisation_model.dart';
+import 'package:memo/presentation/screens/memo_card_study_screen.dart';
+import 'package:memo/presentation/screens/memo_word_screen.dart';
 import 'package:memo/presentation/widgets/memo_action_button.dart';
 import 'package:memo/presentation/widgets/memo_popup_menu_button.dart';
 import 'package:memo/presentation/widgets/memo_word_item.dart';
@@ -44,30 +46,39 @@ class MyApp extends StatelessWidget {
             backgroundColor: milk,
           ),
         ),
-        home: const MyHomePage(),
+        home: const DefaultTabController(
+          length: 2,
+          child: MemoHomePage(),
+        ),
       );
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
-
-  @override
-  MyHomePageState createState() => MyHomePageState();
-}
-
-class MyHomePageState extends State<MyHomePage> {
-  final TextEditingController wordController = TextEditingController();
-  final TextEditingController transcriptionController = TextEditingController();
-  final TextEditingController translationController = TextEditingController();
+class MemoHomePage extends StatelessWidget {
+  const MemoHomePage({super.key});
 
   @override
   Widget build(final BuildContext context) => Scaffold(
         appBar: AppBar(
+          bottom: TabBar(
+            labelColor: milk,
+            unselectedLabelColor: lightGrey,
+            indicatorColor: milk,
+            tabs: const [
+              Text(
+                'Word',
+                style: TextStyle(fontSize: 30),
+              ),
+              Text(
+                'Study cards',
+                style: TextStyle(fontSize: 30),
+              ),
+            ],
+          ),
           title: const Center(
             child: Text(
               // 6 steps for Android
               '      Mémo',
-              style: TextStyle(fontSize: 30),
+              style: TextStyle(fontSize: 40),
             ),
           ),
           actions: <Widget>[
@@ -76,71 +87,11 @@ class MyHomePageState extends State<MyHomePage> {
             ),
           ],
         ),
-        body: BlocBuilder<MemoCubit, MemoCubitStates>(
-          builder: (final context, final state) {
-            final memoCubit = context.read<MemoCubit>();
-            final filteredKeys = memoCubit.state.filteredKeys;
-            return ListView.separated(
-              itemCount: filteredKeys.length,
-              itemBuilder: (final context, final index) {
-                final key = filteredKeys[index];
-                final memoWord = memoCubit.memoryBox.get(key);
-                if (memoWord != null) {
-                  return MemoWordItem(
-                    memorisationWord: memoWord.word,
-                    memorisationTranscription: memoWord.transcription,
-                    memorisationTranslation: memoWord.translation,
-                    onChangeLearningState: () async {
-                      await context
-                          .read<MemoCubit>()
-                          .onChangeLearningState(memoWord, key);
-                    },
-                    onDeleteWord: () async {
-                      await context.read<MemoCubit>().onDeleteWord(index);
-                    },
-                    onShowTranslate: () async {
-                      await context
-                          .read<MemoCubit>()
-                          .onShowTranslate(context, memoWord);
-                    },
-                    iconColor: memoWord.isLearned
-                        ? Colors.amber
-                        : Colors.grey.shade600,
-                  );
-                }
-                return null;
-              },
-              separatorBuilder: (final context, final index) => const Divider(),
-              shrinkWrap: true,
-            );
-          },
-        ),
-        floatingActionButton: MemoActionButton(
-          onActionButtonPressed: () async {
-            await showDialog(
-              context: context,
-              builder: (final context) => WordDialog(
-                wordController: wordController,
-                transcriptionController: transcriptionController,
-                translationController: translationController,
-                toAddNewWord: () async {
-                  final String wordText = wordController.text;
-                  final String transcriptionText = transcriptionController.text;
-                  final String translationText = translationController.text;
-
-                  await context.read<MemoCubit>().addNewWord(
-                        wordText,
-                        transcriptionText,
-                        translationText,
-                        context,
-                      );
-                  wordController.clear();
-                  transcriptionController.clear();
-                  translationController.clear();
-                },
-              ),
-            );
-          },
+        body: const TabBarView(
+          children: [
+            MemoWordScreen(),
+            MemoCardStudyScreen(),
+          ],
         ),
       );
 }

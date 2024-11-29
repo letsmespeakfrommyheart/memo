@@ -7,3 +7,4 @@ Color milk = const Color.fromARGB(255, 249, 240, 212);
 // Color green = const Color.fromARGB(255, 172, 175, 131);
 Color teal = const Color.fromARGB(255, 63, 94, 106);
 Color grey = const Color.fromARGB(255, 59, 55, 58);
+Color lightGrey = const Color.fromARGB(148, 59, 55, 58);
