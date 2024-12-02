@@ -23,6 +23,13 @@ class MemoWordItem extends StatelessWidget {
 
   @override
   Widget build(final BuildContext context) => ListTile(
+        tileColor: milkColor,
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: greenColor),
+          borderRadius: const BorderRadius.all(
+            Radius.circular(20),
+          ),
+        ),
         contentPadding: const EdgeInsets.only(left: 10, right: 5),
         minLeadingWidth: 0,
         minVerticalPadding: 0,
@@ -50,7 +57,7 @@ class MemoWordItem extends StatelessWidget {
         ),
         trailing: IconButton(
           icon: const Icon(Icons.clear),
-          color: red,
+          color: redColor,
           onPressed: onDeleteWord,
         ),
         onTap: onShowTranslate,

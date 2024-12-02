@@ -85,7 +85,6 @@ class MemoCubit extends Cubit<MemoCubitStates> {
         isLearned: true,
       );
       await memoryBox.put(key, learnedWord);
-      emit(state.copyWith(listOfWords: memoryBox.values.toList()));
     } else if (memoWord.isLearned case true) {
       final notLearnedWord = MemorisationModel(
         word: memoWord.word,
@@ -94,8 +93,9 @@ class MemoCubit extends Cubit<MemoCubitStates> {
         isLearned: false,
       );
       await memoryBox.put(key, notLearnedWord);
-      emit(state.copyWith(listOfWords: memoryBox.values.toList()));
     }
+    filterKeys(state.filter, memoryBox);
+    emit(state.copyWith(listOfWords: memoryBox.values.toList()));
   }
 
   void filterKeys(final Filter filter, final Box<MemorisationModel> words) {

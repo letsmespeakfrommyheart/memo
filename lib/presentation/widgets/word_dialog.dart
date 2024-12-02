@@ -25,11 +25,11 @@ class WordDialog extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               TextField(
-                cursorColor: teal,
+                cursorColor: tealColor,
                 style: const TextStyle(fontSize: 28),
                 decoration: InputDecoration(
                   focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: teal),
+                    borderSide: BorderSide(color: tealColor),
                   ),
                   hintText: 'Word',
                   hintStyle: const TextStyle(fontSize: 24),
@@ -41,11 +41,11 @@ class WordDialog extends StatelessWidget {
                 height: 8,
               ),
               TextField(
-                cursorColor: teal,
+                cursorColor: tealColor,
                 style: const TextStyle(fontSize: 28),
                 decoration: InputDecoration(
                   focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: teal),
+                    borderSide: BorderSide(color: tealColor),
                   ),
                   hintText: 'Transcription',
                   hintStyle: const TextStyle(fontSize: 24),
@@ -56,13 +56,13 @@ class WordDialog extends StatelessWidget {
                 height: 8,
               ),
               TextField(
-                cursorColor: teal,
+                cursorColor: tealColor,
                 style: const TextStyle(fontSize: 28),
                 decoration: InputDecoration(
                   hintText: 'Translation',
                   hintStyle: const TextStyle(fontSize: 24),
                   focusedBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: teal),
+                    borderSide: BorderSide(color: tealColor),
                   ),
                 ),
                 controller: translationController,
@@ -73,7 +73,7 @@ class WordDialog extends StatelessWidget {
               ElevatedButton(
                 onPressed: toAddNewWord,
                 style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(teal),
+                  backgroundColor: WidgetStateProperty.all(tealColor),
                   shape: WidgetStateProperty.all(
                     RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -84,7 +84,7 @@ class WordDialog extends StatelessWidget {
                   'Add a new word',
                   style: TextStyle(
                     fontSize: 22,
-                    color: milk,
+                    color: milkColor,
                   ),
                 ),
               ),
