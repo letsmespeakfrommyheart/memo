@@ -1,18 +1,23 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:hive/hive.dart';
 import 'package:memo/data/filter_model.dart';
 import 'package:memo/data/memorisation_model.dart';
+import 'package:memo/data/study_card_model.dart';
 import 'package:memo/presentation/widgets/translate_dialog.dart';
 
 part 'memo_cubit_states.dart';
 part 'memo_cubit.freezed.dart';
 
 class MemoCubit extends Cubit<MemoCubitStates> {
-  MemoCubit(this.memoryBox) : super(const MemoCubitStates()) {
+  MemoCubit(
+    this.memoryBox,
+  ) : super(const MemoCubitStates()) {
     filterKeys(Filter.all, memoryBox);
   }
   final Box<MemorisationModel> memoryBox;
@@ -115,5 +120,12 @@ class MemoCubit extends Cubit<MemoCubitStates> {
             .toList();
     }
     emit(state.copyWith(filteredKeys: filteredKeys));
+  }
+
+  Future<List<StudyCardModel>> loadQuestions() async {
+    final String jsonString =
+        await rootBundle.loadString('assets/json/questions.json');
+    final List<dynamic> jsonData = json.decode(jsonString);
+    return jsonData.map((final item) => StudyCardModel.fromJson(item)).toList();
   }
 }

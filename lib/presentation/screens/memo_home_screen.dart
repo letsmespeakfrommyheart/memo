@@ -33,6 +33,7 @@ class MemoHomeScreen extends StatelessWidget {
           ),
         ),
         body: const TabBarView(
+          physics: NeverScrollableScrollPhysics(),
           children: [
             MemoWordScreen(),
             MemoCardStudyScreen(),
