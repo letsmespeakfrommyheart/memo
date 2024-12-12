@@ -23,7 +23,7 @@ class _MemoWordScreenState extends State<MemoWordScreen> {
   final TextEditingController translationController = TextEditingController();
   @override
   Widget build(final BuildContext context) =>
-      BlocBuilder<MemoCubit, MemoCubitStates>(
+      BlocBuilder<MemoCubit, MemoCubitState>(
         builder: (final context, final state) {
           final memoCubit = context.read<MemoCubit>();
           final filteredKeys = memoCubit.state.filteredKeys;

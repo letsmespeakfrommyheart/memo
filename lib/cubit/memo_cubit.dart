@@ -14,10 +14,10 @@ import 'package:memo/presentation/widgets/translate_dialog.dart';
 part 'memo_cubit_states.dart';
 part 'memo_cubit.freezed.dart';
 
-class MemoCubit extends Cubit<MemoCubitStates> {
+class MemoCubit extends Cubit<MemoCubitState> {
   MemoCubit(
     this.memoryBox,
-  ) : super(const MemoCubitStates()) {
+  ) : super(const MemoCubitState()) {
     filterKeys(Filter.all, memoryBox);
   }
   final Box<MemorisationModel> memoryBox;
@@ -122,10 +122,15 @@ class MemoCubit extends Cubit<MemoCubitStates> {
     emit(state.copyWith(filteredKeys: filteredKeys));
   }
 
-  Future<List<StudyCardModel>> loadQuestions() async {
+  Future<void> loadQuestions() async {
+    if (state.questions.isNotEmpty) {
+      return;
+    }
     final String jsonString =
         await rootBundle.loadString('assets/json/questions.json');
     final List<dynamic> jsonData = json.decode(jsonString);
-    return jsonData.map((final item) => StudyCardModel.fromJson(item)).toList();
+    final questions =
+        jsonData.map((final item) => StudyCardModel.fromJson(item)).toList();
+    emit(state.copyWith(questions: questions));
   }
 }

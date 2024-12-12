@@ -1,10 +1,11 @@
 part of 'memo_cubit.dart';
 
 @freezed
-class MemoCubitStates with _$MemoCubitStates {
-  const factory MemoCubitStates({
+class MemoCubitState with _$MemoCubitState {
+  const factory MemoCubitState({
     @Default([]) final List<dynamic> listOfWords,
     @Default(Filter.all) final Filter filter,
     @Default([]) final List<int> filteredKeys,
-  }) = _MemoCubitStates;
+    @Default([]) final List<StudyCardModel> questions,
+  }) = _MemoCubitState;
 }

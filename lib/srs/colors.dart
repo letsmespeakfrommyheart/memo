@@ -17,3 +17,9 @@ Color lightOrange = const Color.fromARGB(255, 244, 162, 97);
 Color deepOrange = const Color.fromARGB(255, 231, 111, 81);
 Color deepPink = const Color.fromARGB(255, 238, 70, 98);
 Color blackColor = const Color.fromARGB(255, 0, 0, 0);
+
+final studyCardBackgroundColors = [
+  greenColor,
+  lightOrange,
+  yellow,
+];

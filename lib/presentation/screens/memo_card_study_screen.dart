@@ -8,6 +8,7 @@ import 'package:memo/cubit/memo_cubit.dart';
 import 'package:memo/data/study_card_model.dart';
 import 'package:memo/presentation/widgets/study_card.dart';
 import 'package:memo/srs/colors.dart';
+import 'package:memo/srs/icons.dart';
 
 class MemoCardStudyScreen extends StatefulWidget {
   const MemoCardStudyScreen({super.key});
@@ -17,23 +18,6 @@ class MemoCardStudyScreen extends StatefulWidget {
 }
 
 class _MemoCardStudyScreenState extends State<MemoCardStudyScreen> {
-  late Future<List<StudyCardModel>> _listQuestions;
-  final colors = [
-    greenColor,
-    lightOrange,
-    yellow,
-  ];
-  final icons = [
-    Icons.flutter_dash,
-    Icons.electric_bolt,
-    Icons.rocket_launch,
-    Icons.mood,
-    Icons.school,
-    Icons.flash_on,
-    Icons.extension,
-    Icons.gesture,
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -41,50 +25,42 @@ class _MemoCardStudyScreenState extends State<MemoCardStudyScreen> {
 
   @override
   Future<void> didChangeDependencies() async {
-    await (_listQuestions = context.read<MemoCubit>().loadQuestions());
+    await context.read<MemoCubit>().loadQuestions();
     super.didChangeDependencies();
   }
 
   @override
-  Widget build(final BuildContext context) => FutureBuilder(
-        future: _listQuestions,
-        builder: (final context, final snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+  Widget build(final BuildContext context) =>
+      BlocBuilder<MemoCubit, MemoCubitState>(
+        builder: (final context, final state) {
+          if (state.questions.isEmpty) {
             return const Center(
               child: CircularProgressIndicator(),
             );
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text('Load questions error: $snapshot.error'),
-            );
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
-              child: Text('No questions & answers available'),
-            );
-          } else {
-            final questions = snapshot.data!;
-            return Swiper(
-              itemCount: questions.length,
-              itemBuilder: (final context, final index) {
-                final backgroundColor = colors[index % colors.length];
-                final backgroundIcon = icons[index % icons.length];
-                return FlipCard(
-                  front: StudyCard(
-                    text: questions[index].question,
-                    backgroundColor: backgroundColor,
-                    textAlign: TextAlign.center,
-                    icon: backgroundIcon,
-                  ),
-                  back: StudyCard(
-                    text: questions[index].answer,
-                    backgroundColor: backgroundColor,
-                  ),
-                );
-              },
-              layout: SwiperLayout.STACK,
-              itemWidth: MediaQuery.of(context).size.width * 0.8,
-            );
           }
+          final questions = state.questions;
+          return Swiper(
+            itemCount: questions.length,
+            itemBuilder: (final context, final index) {
+              final backgroundColor = studyCardBackgroundColors[
+                  index % studyCardBackgroundColors.length];
+              final backgroundIcon = icons[index % icons.length];
+              return FlipCard(
+                front: StudyCard(
+                  text: questions[index].question,
+                  backgroundColor: backgroundColor,
+                  textAlign: TextAlign.center,
+                  icon: backgroundIcon,
+                ),
+                back: StudyCard(
+                  text: questions[index].answer,
+                  backgroundColor: backgroundColor,
+                ),
+              );
+            },
+            layout: SwiperLayout.STACK,
+            itemWidth: MediaQuery.of(context).size.width * 0.8,
+          );
         },
       );
 }
